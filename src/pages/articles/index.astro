@@ -1,0 +1,108 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+
+const title = 'Статьи и гайды по финансам Казахстана';
+const description =
+  'Практические статьи Finance KZ: как взять микрозайм, выбрать банковскую карту, улучшить кредитную историю, проверить МФО и пользоваться рассрочкой 0%.';
+
+const all = await getCollection('articles', ({ data }) => !data.draft);
+
+const categoryMeta: Record<string, { label: string; key: string }> = {
+  mfo: { label: 'МФО и займы', key: 'mfo' },
+  cards: { label: 'Банковские карты', key: 'cards' },
+  general: { label: 'Финансовая грамотность', key: 'general' },
+};
+
+const articles = all
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .map((entry) => ({
+    slug: entry.id.replace(/\.md$/, ''),
+    title: entry.data.title,
+    description: entry.data.description,
+    category: entry.data.category,
+    date: entry.data.date,
+    readingMinutes: entry.data.readingMinutes,
+    tags: entry.data.tags,
+  }));
+
+const featured = articles[0];
+
+const byCategory = Object.entries(categoryMeta).map(([key, meta]) => ({
+  ...meta,
+  items: articles.filter((a) => a.category === key),
+}));
+---
+
+<BaseLayout {title} {description} canonical="/articles" keywords={['статьи о займах', 'финансовая грамотность Казахстан', 'кредитная история', 'как выбрать карту']}>
+  <Breadcrumbs items={[{ label: 'Главная', href: '/' }, { label: 'Статьи' }]} />
+
+  <section class="section section--tight">
+    <div class="container">
+      <span class="eyebrow">База знаний</span>
+      <h1>Статьи и гайды по финансам Казахстана</h1>
+      <p class="muted" style="max-width:70ch;margin-top:14px;font-size:1.04rem;">
+        Разборы без воды: как считать переплату, как проверять организации, как выбирать карту
+        и что делать с кредитной историей. {articles.length} материалов.
+      </p>
+    </div>
+  </section>
+
+  {
+    featured && (
+      <section class="section section--tight">
+        <div class="container">
+          <a href={`/articles/${featured.slug}`} class="card card--hover" style="padding:clamp(22px,3vw,34px);">
+            <div class="badge-row">
+              <span class="badge badge--brand">Читают чаще всего</span>
+              <span class="badge">{categoryMeta[featured.category].label}</span>
+              <span class="badge">{featured.readingMinutes} мин</span>
+            </div>
+            <h2 style="margin-top:6px;">{featured.title}</h2>
+            <p class="muted" style="max-width:70ch;">{featured.description}</p>
+            <span class="btn btn--primary btn--sm" style="align-self:flex-start;">Читать статью</span>
+          </a>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    byCategory.map((group) =>
+      group.items.length > 0 ? (
+        <section class="section section--tight">
+          <div class="container">
+            <div class="section-head">
+              <div>
+                <h2>{group.label}</h2>
+              </div>
+            </div>
+            <div class="grid grid--3">
+              {group.items.map((article) => (
+                <ArticleCard article={article} />
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null,
+    )
+  }
+
+  <section class="section">
+    <div class="container">
+      <div class="cta">
+        <h2>Хотите разобраться в своей ситуации?</h2>
+        <p>
+          Посмотрите каталог МФО и банковских карт, чтобы увидеть конкретные условия и
+          сравнить их между собой.
+        </p>
+        <div class="btn-row" style="justify-content:center;">
+          <a href="/mfo" class="btn btn--accent">Каталог МФО</a>
+          <a href="/bank-cards" class="btn btn--ghost">Каталог карт</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,200 @@
+---
+import '../styles/global.css';
+import { SITE, NAV, CONTACT } from '../config/site';
+
+export type Props = {
+  title?: string;
+  description?: string;
+  canonical?: string | URL;
+  ogType?: 'website' | 'article';
+  noindex?: boolean;
+  publishedAt?: Date;
+  updatedAt?: Date;
+  keywords?: string[];
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+};
+
+const {
+  title,
+  description = SITE.description,
+  canonical,
+  ogType = 'website',
+  noindex = false,
+  publishedAt,
+  updatedAt,
+  keywords = [],
+  jsonLd,
+} = Astro.props;
+
+const rawTitle = title ?? SITE.titleDefault;
+const pageTitle = title ? SITE.titleTemplate.replace('%s', title) : rawTitle;
+
+const canonicalPath =
+  canonical ?? (Astro.url.pathname.replace(/\/+$/, '') || '/');
+
+const canonicalUrl = new URL(canonicalPath, SITE.url).href;
+
+const ogImage = new URL(SITE.ogImage, SITE.url).href;
+
+const currentPath = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const isActive = (href: string) =>
+  href === '/' ? currentPath === '/' : currentPath.startsWith(href);
+
+/** Несколько объектов объединяем в @graph — так корректнее для валидаторов. */
+const jsonLdPayload = !jsonLd
+  ? undefined
+  : Array.isArray(jsonLd)
+    ? { '@context': 'https://schema.org', '@graph': jsonLd }
+    : jsonLd;
+---
+
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    {!noindex && <meta name="robots" content="index, follow, max-image-preview:large" />}
+    {keywords.length > 0 && <meta name="keywords" content={keywords.join(', ')} />}
+    <meta name="author" content={SITE.name} />
+    <meta name="language" content="ru-KZ" />
+    <meta name="geo.region" content="KZ" />
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:locale" content={SITE.locale} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    {publishedAt && <meta property="article:published_time" content={publishedAt.toISOString()} />}
+    {updatedAt && <meta property="article:modified_time" content={updatedAt.toISOString()} />}
+
+    <meta name="theme-color" content={SITE.themeColor} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="generator" content={Astro.generator} />
+
+    {
+      jsonLdPayload && (
+        <script
+          type="application/ld+json"
+          set:html={JSON.stringify(jsonLdPayload)}
+          is:inline
+        />
+      )
+    }
+  </head>
+
+  <body>
+    <header class="header">
+      <div class="container header__inner">
+        <a href="/" class="logo" aria-label={`${SITE.name} — на главную`}>
+          <span class="logo__mark" aria-hidden="true">FK</span>
+          <span>
+            Finance KZ
+            <span class="logo__sub">Финансы Казахстана</span>
+          </span>
+        </a>
+
+        <nav class="nav" aria-label="Основная навигация">
+          {NAV.map((item) => (
+            <a href={item.href} class={isActive(item.href) ? 'is-active' : undefined}>
+              {item.label}
+            </a>
+          ))}
+        </nav>
+
+        <a href="/mfo" class="btn btn--primary btn--sm header__cta">Подобрать займ</a>
+
+        <button class="burger" id="burger" aria-label="Меню" aria-expanded="false" aria-controls="mobile-nav">
+          <span></span>
+        </button>
+      </div>
+
+      <div class="mobile-nav" id="mobile-nav">
+        {NAV.map((item) => (
+          <a href={item.href}>{item.label}</a>
+        ))}
+        <a href="/mfo">Подобрать займ</a>
+      </div>
+    </header>
+
+    <main class="main">
+      <slot />
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="footer__grid">
+          <div>
+            <a href="/" class="logo">
+              <span class="logo__mark" aria-hidden="true">FK</span>
+              <span>Finance KZ</span>
+            </a>
+            <p>
+              Информационный справочник по финансам РК: микрофинансовые организации и
+              банковские карты Казахстана. Помогаем считать переплату и выбирать осознанно.
+            </p>
+          </div>
+
+          <div>
+            <h4>Каталоги</h4>
+            <ul>
+              <li><a href="/mfo">МФО Казахстана</a></li>
+              <li><a href="/bank-cards">Банковские карты</a></li>
+              <li><a href="/articles">Статьи и гайды</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4>Популярное</h4>
+            <ul>
+              <li><a href="/articles/kak-vzyat-mikrozaym-kz">Как взять микрозайм</a></li>
+              <li><a href="/articles/kak-vybrat-bankovskuyu-kartu">Как выбрать карту</a></li>
+              <li><a href="/articles/kreditnaya-istoriya-kz">Кредитная история</a></li>
+              <li><a href="/articles/kak-proverit-mfo-kazakhstan">Проверить МФО</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4>Проект</h4>
+            <ul>
+              <li><a href="/about">О проекте</a></li>
+              <li><a href="/about#disclaimer">Дисклеймер</a></li>
+              <li><a href="/about#partners">Партнёры и реклама</a></li>
+              <li><a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer__bottom">
+          <span>© {SITE.foundedYear} {SITE.name}. Все права защищены.</span>
+          <span>
+            Не является публичной офертой. Условия уточняйте у организаций.
+          </span>
+        </div>
+      </div>
+    </footer>
+
+    <script is:inline>
+      (function () {
+        var burger = document.getElementById('burger');
+        var nav = document.getElementById('mobile-nav');
+        if (!burger || !nav) return;
+        burger.addEventListener('click', function () {
+          var open = nav.classList.toggle('is-open');
+          burger.setAttribute('aria-expanded', String(open));
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,193 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import CardOfferCard from '../../components/CardOfferCard.astro';
+import FaqBlock from '../../components/FaqBlock.astro';
+import { CARD_OFFERS, formatType } from '../../data/cards';
+
+const title = 'Банковские карты Казахстана — кэшбэк и условия';
+const description =
+  'Каталог банковских карт Казахстана: кэшбэк, стоимость обслуживания, рассрочка 0%, виртуальный формат и льготные периоды. Сравните дебетовые и кредитные карты онлайн.';
+
+const faqs = [
+  {
+    q: 'Какая карта в Казахстане даёт максимальный кэшбэк?',
+    a: 'Обычно лидируют карты с кэшбэком 5% и повышенными категориями, но у них часто есть условия: активация бонуса, лимит в тенге или платная годовая комиссия. Сравнивайте кэшбэк вместе со стоимостью обслуживания.',
+  },
+  {
+    q: 'Чем виртуальная карта отличается от обычной?',
+    a: 'Виртуальная карта выпускается онлайн за минуты и нужна для покупок в интернете, подписок и поездок. Пластик не выдаётся, зато карту легко заблокировать при потере.',
+  },
+  {
+    q: 'Что значит рассрочка 0% на карте?',
+    a: 'Это оплата покупки частями без процентов у магазинов-партнёров. При полном погашении вы платите ровно сумму покупки. Деньги при этом предоставляет банк.',
+  },
+  {
+    q: 'Нужно ли подтверждать доход для получения карты?',
+    a: 'Дебетовые карты часто выдают без проверки дохода, особенно виртуальные. Для кредитных карт банки обычно запрашивают подтверждение дохода и смотрят кредитную историю.',
+  },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Банковские карты Казахстана',
+  description,
+  numberOfItems: CARD_OFFERS.length,
+  itemListElement: CARD_OFFERS.map((card, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: `${card.name} — ${card.bank}`,
+    url: `https://finance-kz.kz/bank-cards/${card.slug}`,
+  })),
+};
+---
+
+<BaseLayout {title} {description} canonical="/bank-cards" keywords={['банковские карты Казахстан', 'карта с кэшбэком', 'бесплатная карта Казахстан', 'виртуальная карта', 'рассрочка 0%']} jsonLd={jsonLd}>
+  <Breadcrumbs items={[{ label: 'Главная', href: '/' }, { label: 'Банковские карты' }]} />
+
+  <section class="section section--tight">
+    <div class="container">
+      <span class="eyebrow">Каталог</span>
+      <h1>Банковские карты Казахстана</h1>
+      <p class="muted" style="max-width:70ch;margin-top:14px;font-size:1.04rem;">
+        {CARD_OFFERS.length} дебетовых и кредитных карт: кэшбэк, стоимость обслуживания,
+        виртуальный выпуск и рассрочка 0%. Сравните условия в одном списке.
+      </p>
+
+      <div class="table-wrap" style="margin-top:26px;">
+        <table>
+          <caption style="position:absolute;left:-9999px;">Сравнение банковских карт Казахстана</caption>
+          <thead>
+            <tr>
+              <th scope="col">Карта</th>
+              <th scope="col">Банк</th>
+              <th scope="col">Тип</th>
+              <th scope="col">Кэшбэк</th>
+              <th scope="col">Обслуживание</th>
+              <th scope="col">Возраст</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              CARD_OFFERS.map((card) => (
+                <tr>
+                  <th scope="row">
+                    <a href={`/bank-cards/${card.slug}`}>{card.name}</a>
+                  </th>
+                  <td>{card.bank}</td>
+                  <td>{formatType(card.type)}</td>
+                  <td>до {card.cashbackPercent}%</td>
+                  <td>
+                    {card.serviceCostYear === 0
+                      ? 'бесплатно'
+                      : `${card.serviceCostYear.toLocaleString('ru-KZ')} ₸/год`}
+                  </td>
+                  <td>{card.minAge}+</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="disclaimer-box" style="margin-top:20px;">
+        <strong>Демо-данные MVP:</strong> банки и названия карт реальные, числовые условия
+        (кэшбэк, лимиты, стоимость обслуживания) — демонстрационные для проверки вёрстки.
+        Перед публикацией сверьте с действующими тарифами банков.
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <h2>Все карты в каталоге</h2>
+          <p>Откройте карточку, чтобы увидеть плюсы, ограничения и условия выпуска.</p>
+        </div>
+      </div>
+
+      <div class="filters" data-filters>
+        <button class="filter-btn is-active" data-filter="all">Все</button>
+        <button class="filter-btn" data-filter="free">Бесплатное обслуживание</button>
+        <button class="filter-btn" data-filter="virtual">Виртуальные</button>
+        <button class="filter-btn" data-filter="debit">Дебетовые</button>
+        <button class="filter-btn" data-filter="credit">Кредитные</button>
+      </div>
+
+      <div class="grid grid--3 catalog-grid" data-catalog>
+        {
+          CARD_OFFERS.map((card) => (
+            <div
+              data-item
+              data-free={card.serviceCostYear === 0 ? 'true' : 'false'}
+              data-virtual={card.virtual ? 'true' : 'false'}
+              data-type={card.type}
+            >
+              <CardOfferCard card={card} accent={card.type === 'credit' ? false : true} />
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="empty" data-empty hidden>
+        По этому фильтру карт пока нет. Выберите другой фильтр.
+      </div>
+    </div>
+  </section>
+
+  <FaqBlock items={faqs} title="Частые вопросы о банковских картах" />
+
+  <section class="section">
+    <div class="container">
+      <div class="cta">
+        <h2>Выбираете карту?</h2>
+        <p>
+          Разберите семь критериев выбора: тип карты, кэшбэк, стоимость обслуживания,
+          виртуальный формат и скрытые условия акций.
+        </p>
+        <div class="btn-row" style="justify-content:center;">
+          <a href="/articles/kak-vybrat-bankovskuyu-kartu" class="btn btn--accent">Читать гайд</a>
+          <a href="/articles/rassrochka-0-protsentov" class="btn btn--ghost">Про рассрочку 0%</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script is:inline>
+    (function () {
+      var root = document.querySelector('[data-catalog]');
+      if (!root) return;
+
+      var buttons = document.querySelectorAll('[data-filters] .filter-btn');
+      var items = root.querySelectorAll('[data-item]');
+      var empty = document.querySelector('[data-empty]');
+
+      buttons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var filter = btn.getAttribute('data-filter');
+
+          buttons.forEach(function (b) {
+            b.classList.toggle('is-active', b === btn);
+          });
+
+          var visible = 0;
+          items.forEach(function (item) {
+            var show =
+              filter === 'all' ||
+              (filter === 'free' && item.getAttribute('data-free') === 'true') ||
+              (filter === 'virtual' && item.getAttribute('data-virtual') === 'true') ||
+              (filter === 'debit' && item.getAttribute('data-type') === 'debit') ||
+              (filter === 'credit' && item.getAttribute('data-type') === 'credit');
+
+            item.style.display = show ? '' : 'none';
+            if (show) visible++;
+          });
+
+          if (empty) empty.hidden = visible > 0;
+        });
+      });
+    })();
+  </script>
+</BaseLayout>

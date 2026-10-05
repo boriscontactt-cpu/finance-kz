@@ -1,0 +1,42 @@
+---
+import { AD_LABEL } from '../config/site';
+
+export type Props = {
+  label: string;
+  url: string;
+  cta: string;
+  /** Показывать метку «Реклама». По умолчанию true. */
+  showAdLabel?: boolean;
+  variant?: 'accent' | 'primary' | 'ghost';
+  size?: 'sm' | 'md';
+  /** Текст раскрытия под меткой. */
+  disclosure?: string;
+};
+
+const {
+  label,
+  url,
+  cta,
+  showAdLabel = true,
+  variant = 'accent',
+  size = 'md',
+  disclosure = 'Партнёрская ссылка. Решение принимаете самостоятельно.',
+} = Astro.props;
+
+const external = url.startsWith('http');
+---
+
+<div class="affiliate">
+  <div>
+    <div class="affiliate__label">{showAdLabel ? `${AD_LABEL} · ` : ''}{label}</div>
+    <div class="ad-disclosure">{disclosure}</div>
+  </div>
+  <a
+    href={url}
+    class:list={['btn', `btn--${variant}`, size === 'sm' && 'btn--sm']}
+    rel={external ? 'sponsored nofollow noopener' : 'nofollow'}
+    target={external ? '_blank' : undefined}
+  >
+    {cta}
+  </a>
+</div>

@@ -1,0 +1,88 @@
+---
+import type { MfoOffer } from '../data/mfo';
+import { formatAmountRange, formatTermRange, hasConfirmedTerms } from '../data/mfo';
+
+export type Props = {
+  offer: MfoOffer;
+  accent?: boolean;
+  /** Показывать кнопку перехода к партнёру. */
+  showCta?: boolean;
+};
+
+const { offer, accent = false, showCta = true } = Astro.props;
+
+const amount = formatAmountRange(offer.minAmount, offer.maxAmount);
+const term = formatTermRange(offer.minTermDays, offer.maxTermDays);
+const showTerms = hasConfirmedTerms(offer);
+
+const specs: { label: string; value: string }[] = [
+  ...(amount ? [{ label: 'Сумма', value: amount }] : []),
+  ...(offer.aprAnnual !== undefined
+    ? [{ label: 'Ставка', value: `${offer.aprAnnual}% годовых` }]
+    : []),
+  ...(offer.gesv !== undefined ? [{ label: 'ГЭСВ', value: `${offer.gesv}% годовых` }] : []),
+  ...(term ? [{ label: 'Срок', value: term }] : []),
+];
+---
+
+<div class="card card--hover">
+  <div class="org">
+    <div class:list={['org__logo', accent && 'org__logo--accent']} aria-hidden="true">
+      {offer.logoText}
+    </div>
+    <div>
+      <a class="org__name" href={`/mfo/${offer.slug}`}>{offer.name}</a>
+      <div class="org__tag">Микрофинансовая организация · Казахстан</div>
+    </div>
+  </div>
+
+  {
+    showTerms ? (
+      <div class="specs">
+        {specs.map((spec) => (
+          <div class="specs__item">
+            <span class="specs__label">{spec.label}</span>
+            <span class="specs__value">{spec.value}</span>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p class="card__text">
+        Условия займа уточняйте на официальном сайте организации — мы не публикуем
+        непроверенные цифры.
+      </p>
+    )
+  }
+
+  <div class="badge-row">
+    {offer.online && <span class="badge badge--accent">Онлайн</span>}
+    {offer.fastMinutes && <span class="badge badge--accent">Решение до 15 минут</span>}
+    {offer.installment && <span class="badge badge--brand">Рассрочка 0%</span>}
+    {offer.minAge !== undefined && <span class="badge">Возраст {offer.minAge}+</span>}
+    {offer.rating !== undefined && <span class="badge">★ {offer.rating.toFixed(1)}</span>}
+    {!offer.online && !offer.fastMinutes && !offer.installment && (
+      <span class="badge">Уточняйте условия</span>
+    )}
+  </div>
+
+  {
+    showCta ? (
+      <a
+        href={offer.affiliateUrl}
+        class="btn btn--accent btn--sm btn--block"
+        rel="sponsored nofollow noopener"
+        target="_blank"
+      >
+        {offer.cta}
+      </a>
+    ) : (
+      <a href={`/mfo/${offer.slug}`} class="btn btn--ghost btn--sm btn--block">
+        Подробнее об организации
+      </a>
+    )
+  }
+
+  <a href={`/mfo/${offer.slug}`} class="small muted" style="text-align:center;">
+    Подробнее об организации
+  </a>
+</div>

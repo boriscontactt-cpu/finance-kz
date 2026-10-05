@@ -1,0 +1,219 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import MfoCard from '../../components/MfoCard.astro';
+import FaqBlock from '../../components/FaqBlock.astro';
+import { PARTNER_DISCLOSURE } from '../../config/site';
+import {
+  MFO_OFFERS,
+  MFO_PARTNER_NETWORK,
+  formatAmountRange,
+  formatTermRange,
+  formatAgeRange,
+} from '../../data/mfo';
+
+const title = 'МФО Казахстана — партнёрские предложения онлайн';
+const description = `Каталог МФО Казахстана: ${MFO_OFFERS.length} организаций с онлайн-займами. Актуальные условия, ставки и сроки — на странице каждой организации.`;
+
+const faqs = [
+  {
+    q: 'Где смотреть точные условия займа?',
+    a: 'Сумму, срок, ставку и другие параметры нужно смотреть на странице самой организации — условия меняются, и мы не публикуем непроверенные цифры. Нажмите «Получить займ» на карточке: вы перейдёте на официальный сайт организации через партнёрскую ссылку.',
+  },
+  {
+    q: 'Почему на странице организации мало данных?',
+    a: 'Мы показываем только те условия, которые подтверждены и проверены. Пока условия не подтверждены, мы не заполняем их значениями по умолчанию, чтобы вы не приняли решение по недостоверным цифрам.',
+  },
+  {
+    q: 'Что значит партнёрская ссылка?',
+    a: `Это ссылка через партнёрскую сеть ${MFO_PARTNER_NETWORK}. При переходе мы можем получить вознаграждение от партнёра. На условия предложения это не влияет — вы переходите на официальный сайт организации.`,
+  },
+  {
+    q: 'Чем микрозайм отличается от банковского кредита?',
+    a: 'Микрозайм выдаёт микрофинансовая организация, банковский кредит — банк. Требования, проверки и ставки различаются. Подробнее — в статье «Как взять микрозайм в Казахстане».',
+  },
+  {
+    q: 'Как узнать переплату до подписания договора?',
+    a: 'Попросите организацию показать полную стоимость займа в тенге, а не только процентную ставку в день. Пересчитайте её сами: переплата = сумма × ставка × дни ÷ 365. Подробности — в статье о проверке МФО.',
+  },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'МФО Казахстана',
+  description,
+  numberOfItems: MFO_OFFERS.length,
+  itemListElement: MFO_OFFERS.map((offer, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: offer.name,
+    url: `https://finance-kz.kz/mfo/${offer.slug}`,
+  })),
+};
+
+const anyTermsConfirmed = MFO_OFFERS.some(
+  (o) => o.minAmount !== undefined || o.aprAnnual !== undefined || o.minTermDays !== undefined,
+);
+---
+
+<BaseLayout {title} {description} canonical="/mfo" keywords={['МФО Казахстан', 'займ онлайн', 'онлайн займ Казахстан', 'список МФО', 'где взять займ']} jsonLd={jsonLd}>
+  <Breadcrumbs items={[{ label: 'Главная', href: '/' }, { label: 'МФО Казахстана' }]} />
+
+  <section class="section section--tight">
+    <div class="container">
+      <span class="eyebrow">Каталог</span>
+      <h1>МФО Казахстана: партнёрские предложения</h1>
+      <p class="muted" style="max-width:70ch;margin-top:14px;font-size:1.04rem;">
+        {MFO_OFFERS.length} организаций, которые выдают займы онлайн в Казахстане. Выберите
+        подходящую и перейдите на официальный сайт — условия там актуальные.
+      </p>
+
+      <div class="partner-note" style="margin-top:24px;">
+        <svg class="partner-note__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.6"></circle>
+          <path d="M10 9v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+          <circle cx="10" cy="6.2" r="1" fill="currentColor"></circle>
+        </svg>
+        <div class="partner-note__text">{PARTNER_DISCLOSURE}</div>
+      </div>
+
+      {
+        anyTermsConfirmed ? (
+          <div class="table-wrap" style="margin-top:26px;">
+            <table>
+              <caption style="position:absolute;left:-9999px;">Сравнение МФО Казахстана</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Организация</th>
+                  <th scope="col">Сумма</th>
+                  <th scope="col">Ставка</th>
+                  <th scope="col">Срок</th>
+                  <th scope="col">Возраст</th>
+                </tr>
+              </thead>
+              <tbody>
+                {MFO_OFFERS.map((offer) => (
+                  <tr>
+                    <th scope="row">
+                      <a href={`/mfo/${offer.slug}`}>{offer.name}</a>
+                    </th>
+                    <td>{formatAmountRange(offer.minAmount, offer.maxAmount) ?? '—'}</td>
+                    <td>{offer.aprAnnual !== undefined ? `${offer.aprAnnual}%` : '—'}</td>
+                    <td>{formatTermRange(offer.minTermDays, offer.maxTermDays) ?? '—'}</td>
+                    <td>{formatAgeRange(offer.minAge, offer.maxAge) ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div class="disclaimer-box" style="margin-top:26px;">
+            <strong>Сравнительная таблица появится после проверки условий.</strong> Сейчас мы
+            показываем только организации и их официальные страницы: суммы, ставки, сроки и
+            возраст не публикуются, пока не подтверждены. Неверные цифры в финансовом
+            справочнике вредят больше, чем их отсутствие.
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <h2>Все организации в каталоге</h2>
+          <p>
+            Нажмите на карточку, чтобы открыть страницу организации и перейти на её официальный
+            сайт.
+          </p>
+        </div>
+      </div>
+
+      <div class="filters" data-filters>
+        <button class="filter-btn is-active" data-filter="all">Все предложения</button>
+        <button class="filter-btn" data-filter="online">Онлайн-займ</button>
+        <button class="filter-btn" data-filter="fast">Решение до 15 минут</button>
+        <button class="filter-btn" data-filter="installment">Рассрочка 0%</button>
+      </div>
+
+      <p class="small muted" style="margin:-12px 0 20px;">
+        Фильтры появятся по мере подтверждения условий организаций — сейчас в каталоге нет
+        проверенных данных по скорости, онлайн-оформлению и рассрочке.
+      </p>
+
+      <div class="grid grid--3 catalog-grid" data-catalog>
+        {
+          MFO_OFFERS.map((offer, i) => (
+            <div
+              data-item
+              data-fast={offer.fastMinutes ? 'true' : 'false'}
+              data-installment={offer.installment ? 'true' : 'false'}
+              data-online={offer.online ? 'true' : 'false'}
+            >
+              <MfoCard offer={offer} accent={i % 2 === 1} />
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="empty" data-empty hidden>
+        По этому фильтру предложений пока нет. Выберите другой фильтр.
+      </div>
+    </div>
+  </section>
+
+  <FaqBlock items={faqs} title="Частые вопросы о МФО в Казахстане" />
+
+  <section class="section">
+    <div class="container">
+      <div class="cta">
+        <h2>Хотите разобраться до перехода?</h2>
+        <p>
+          Прочитайте пошаговый гайд: какие документы нужны, как посчитать переплату и как
+          проверить организацию перед подписанием договора.
+        </p>
+        <div class="btn-row" style="justify-content:center;">
+          <a href="/articles/kak-vzyat-mikrozaym-kz" class="btn btn--accent">Читать гайд</a>
+          <a href="/articles/kak-proverit-mfo-kazakhstan" class="btn btn--ghost">Проверить МФО</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script is:inline>
+    (function () {
+      var root = document.querySelector('[data-catalog]');
+      if (!root) return;
+
+      var buttons = document.querySelectorAll('[data-filters] .filter-btn');
+      var items = root.querySelectorAll('[data-item]');
+      var empty = document.querySelector('[data-empty]');
+
+      buttons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var filter = btn.getAttribute('data-filter');
+
+          buttons.forEach(function (b) {
+            b.classList.toggle('is-active', b === btn);
+          });
+
+          var visible = 0;
+          items.forEach(function (item) {
+            var show =
+              filter === 'all' ||
+              (filter === 'fast' && item.getAttribute('data-fast') === 'true') ||
+              (filter === 'installment' && item.getAttribute('data-installment') === 'true') ||
+              (filter === 'online' && item.getAttribute('data-online') === 'true');
+
+            item.style.display = show ? '' : 'none';
+            if (show) visible++;
+          });
+
+          if (empty) empty.hidden = visible > 0;
+        });
+      });
+    })();
+  </script>
+</BaseLayout>

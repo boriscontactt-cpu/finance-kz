@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Страница не найдена" description="Страница не найдена" noindex>
+  <section class="section">
+    <div class="container" style="text-align:center;max-width:620px;">
+      <span class="eyebrow">Ошибка 404</span>
+      <h1>Такой страницы нет</h1>
+      <p class="muted" style="margin-top:14px;">
+        Возможно, ссылка устарела или в адресе опечатка. Попробуйте начать с каталогов или
+        главной страницы.
+      </p>
+
+      <div class="btn-row" style="justify-content:center;margin-top:26px;">
+        <a href="/" class="btn btn--primary">На главную</a>
+        <a href="/mfo" class="btn btn--ghost">Каталог МФО</a>
+        <a href="/bank-cards" class="btn btn--ghost">Каталог карт</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

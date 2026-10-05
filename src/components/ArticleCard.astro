@@ -1,0 +1,43 @@
+---
+export type ArticleMeta = {
+  slug: string;
+  title: string;
+  description: string;
+  category: string;
+  date: Date;
+  readingMinutes: number;
+  tags: string[];
+};
+
+export type Props = {
+  article: ArticleMeta;
+};
+
+const { article } = Astro.props;
+
+const fmt = new Intl.DateTimeFormat('ru-KZ', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
+const categoryLabel: Record<string, string> = {
+  mfo: 'МФО',
+  cards: 'Карты',
+  general: 'Финансы',
+};
+---
+
+<a href={`/articles/${article.slug}`} class="card card--hover">
+  <div class="badge-row">
+    <span class="badge badge--brand">{categoryLabel[article.category] ?? article.category}</span>
+    <span class="badge">{article.readingMinutes} мин</span>
+  </div>
+
+  <h3 class="card__title">{article.title}</h3>
+  <p class="card__text">{article.description}</p>
+
+  <div class="small muted" style="margin-top:auto;padding-top:8px;">
+    {fmt.format(article.date)}
+  </div>
+</a>

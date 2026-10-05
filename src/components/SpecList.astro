@@ -1,0 +1,21 @@
+---
+export type Spec = {
+  label: string;
+  value: string;
+};
+
+export type Props = {
+  items: Spec[];
+};
+
+const { items } = Astro.props;
+---
+
+<dl class="specs">
+  {items.map((item) => (
+    <div class="specs__item">
+      <dt class="specs__label">{item.label}</dt>
+      <dd class="specs__value">{item.value}</dd>
+    </div>
+  ))}
+</dl>

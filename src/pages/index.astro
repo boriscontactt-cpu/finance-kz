@@ -1,0 +1,322 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MfoPromoCard from '../components/MfoPromoCard.astro';
+import CardOfferCard from '../components/CardOfferCard.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import { SITE, TAGLINE, PARTNER_DISCLOSURE } from '../config/site';
+import { MFO_OFFERS } from '../data/mfo';
+import { CARD_OFFERS, getFeaturedCards } from '../data/cards';
+
+const featuredCards = getFeaturedCards();
+
+const allArticles = await getCollection('articles', ({ data }) => !data.draft);
+const latestArticles = allArticles
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3)
+  .map((entry) => ({
+    slug: entry.id.replace(/\.md$/, ''),
+    title: entry.data.title,
+    description: entry.data.description,
+    category: entry.data.category,
+    date: entry.data.date,
+    readingMinutes: entry.data.readingMinutes,
+    tags: entry.data.tags,
+  }));
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE.name,
+    url: SITE.url,
+    inLanguage: 'ru-KZ',
+    description: SITE.description,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${SITE.url}/articles?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: SITE.name,
+    url: SITE.url,
+    description: SITE.description,
+  },
+];
+---
+
+<BaseLayout
+  title={undefined}
+  description={SITE.description}
+  canonical="/"
+  keywords={['МФО Казахстан', 'займ онлайн Казахстан', 'банковские карты Казахстан', 'кэшбэк', 'кредитная история']}
+  jsonLd={jsonLd}
+>
+  <section class="hero">
+    <div class="container hero__inner">
+      <div>
+        <span class="eyebrow">{TAGLINE}</span>
+        <h1>МФО и банковские карты Казахстана — с понятными условиями</h1>
+        <p class="hero__lead">
+          Справочник по микрофинансовым организациям и банковским картам Казахстана: смотрите
+          актуальные условия на официальных сайтах, сравнивайте предложения и выбирайте
+          осознанно.
+        </p>
+
+        <div class="hero__actions">
+          <a href="/mfo" class="btn btn--primary">Каталог МФО Казахстана</a>
+          <a href="/bank-cards" class="btn btn--ghost">Подобрать карту</a>
+        </div>
+
+        <div class="hero__stats">
+          <div class="hero__stat">
+            <b>{MFO_OFFERS.length}</b>
+            <span>МФО в каталоге</span>
+          </div>
+          <div class="hero__stat">
+            <b>{CARD_OFFERS.length}</b>
+            <span>банковских карт</span>
+          </div>
+          <div class="hero__stat">
+            <b>{allArticles.length}</b>
+            <span>статьи и гайда</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="calc">
+        <div class="calc__title">Калькулятор переплаты</div>
+        <div class="calc__hint">
+          Посчитайте, сколько будет стоить микрозайм, до того как подпишете договор.
+        </div>
+
+        <div class="field">
+          <label for="calc-amount">
+            Сумма займа
+            <span class="field__value" data-out="amount">100 000 ₸</span>
+          </label>
+          <input
+            type="range"
+            id="calc-amount"
+            min="5000"
+            max="250000"
+            step="5000"
+            value="100000"
+          />
+        </div>
+
+        <div class="field">
+          <label for="calc-days">
+            Срок
+            <span class="field__value" data-out="days">30 дн.</span>
+          </label>
+          <input type="range" id="calc-days" min="1" max="90" step="1" value="30" />
+        </div>
+
+        <div class="field">
+          <label for="calc-rate">
+            Ставка (НПД в % годовых)
+            <span class="field__value" data-out="rate">1,85%</span>
+          </label>
+          <input type="range" id="calc-rate" min="0" max="250" step="1" value="185" />
+        </div>
+
+        <div class="calc__result">
+          <span>Переплата за срок</span>
+          <b data-out="income">1 519 ₸</b>
+        </div>
+
+        <p class="calc__note">
+          Расчёт приблизительный: переплата = сумма × ставка × дни ÷ 365. Точную сумму
+          пересчитает организация в договоре.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="background:var(--bg-soft);border-block:1px solid var(--border);">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Предложения МФО</span>
+          <h2>Займы онлайн в Казахстане — {MFO_OFFERS.length} предложений</h2>
+          <p>
+            Выберите организацию и перейдите на её официальный сайт. Точные суммы, сроки и
+            требования уточняйте у самой организации.
+          </p>
+        </div>
+        <a href="/mfo" class="btn btn--ghost">Каталог МФО</a>
+      </div>
+
+      <div class="partner-note" style="margin-bottom:24px;">
+        <svg class="partner-note__icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.6"></circle>
+          <path d="M10 9v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+          <circle cx="10" cy="6.2" r="1" fill="currentColor"></circle>
+        </svg>
+        <div class="partner-note__text">{PARTNER_DISCLOSURE}</div>
+      </div>
+
+      <div class="mfo-promo">
+        {MFO_OFFERS.map((offer) => <MfoPromoCard offer={offer} />)}
+      </div>
+
+      <div class="disclaimer-box" style="margin-top:26px;">
+        <strong>Обратите внимание:</strong> решение о выдаче займа принимает сама
+        организация — мы не гарантируем одобрение и не публикуем непроверенные условия.
+        Перед подписанием договора сверяйте сумму, срок и ставку с официальным сайтом
+        организации.
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="background:var(--bg-soft);border-bottom:1px solid var(--border);">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Раздел 2</span>
+          <h2>Популярные банковские карты</h2>
+          <p>
+            Дебетовые и кредитные карты казахстанских банков: кэшбэк, стоимость обслуживания,
+            рассрочка 0% и виртуальный формат.
+          </p>
+        </div>
+        <a href="/bank-cards" class="btn btn--ghost">Все {CARD_OFFERS.length} карт</a>
+      </div>
+
+      <div class="grid grid--3">
+        {featuredCards.map((card) => <CardOfferCard card={card} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Раздел 3</span>
+          <h2>Гайды и разборы</h2>
+          <p>
+            Практические статьи: как считать переплату, как улучшить кредитную историю, как не
+            попасться мошенникам и как выбрать карту.
+          </p>
+        </div>
+        <a href="/articles" class="btn btn--ghost">Все статьи</a>
+      </div>
+
+      <div class="grid grid--3">
+        {latestArticles.map((article) => <ArticleCard article={article} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Как это работает</span>
+          <h2>Как работает Finance KZ</h2>
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step__title">Собираем организации</div>
+          <p class="step__text">
+            Собираем МФО Казахстана в одном каталоге и ведём на их официальные страницы.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step__title">Проверяем цифры</div>
+          <p class="step__text">
+            Суммы, ставки и сроки публикуем только после проверки. Непроверенные данные
+            не показываем.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step__title">Не давим</div>
+          <p class="step__text">
+            Никаких форм заявки и личных данных на первом этапе — только факты и ссылки на
+            официальные страницы.
+          </p>
+        </div>
+        <div class="step">
+          <div class="step__title">Отвечаем на вопросы</div>
+          <p class="step__text">
+            Разбираем, как проверить МФО, улучшить кредитную историю и выбрать карту под
+            расходы.
+          </p>
+        </div>
+      </div>
+
+      <div class="disclaimer-box" style="margin-top:26px;">
+        <strong>Важно:</strong> Finance KZ — информационный сайт, а не финансовая организация.
+        Мы не принимаем заявки на займы и не одобряем кредиты. {PARTNER_DISCLOSURE} Условия
+        предоставляют сами организации и они могут измениться — всегда сверяйте условия с
+        официальным сайтом или договором.
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="cta">
+        <h2>Начните с расчёта, а не с заявки</h2>
+        <p>
+          Посчитайте переплату по калькулятору, сравните предложения в каталоге МФО и выберите
+          то, что действительно подходит под вашу ситуацию.
+        </p>
+        <div class="btn-row" style="justify-content:center;">
+          <a href="/mfo" class="btn btn--accent">Смотреть МФО</a>
+          <a href="/articles/kak-vzyat-mikrozaym-kz" class="btn btn--ghost">Гайд по микрозайму</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script is:inline>
+    (function () {
+      var amount = document.getElementById('calc-amount');
+      var days = document.getElementById('calc-days');
+      var rate = document.getElementById('calc-rate');
+      if (!amount || !days || !rate) return;
+
+      var outAmount = document.querySelector('[data-out="amount"]');
+      var outDays = document.querySelector('[data-out="days"]');
+      var outRate = document.querySelector('[data-out="rate"]');
+      var outIncome = document.querySelector('[data-out="income"]');
+
+      function kzt(n) {
+        return n.toLocaleString('ru-KZ') + ' ₸';
+      }
+
+      function plural(n) {
+        var mod10 = n % 10;
+        var mod100 = n % 100;
+        if (mod10 === 1 && mod100 !== 11) return 'день';
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'дня';
+        return 'дней';
+      }
+
+      function update() {
+        var a = Number(amount.value);
+        var d = Number(days.value);
+        var r = Number(rate.value) / 100;
+        var income = Math.round((a * r * d) / 365);
+
+        if (outAmount) outAmount.textContent = kzt(a);
+        if (outDays) outDays.textContent = d + ' ' + plural(d);
+        if (outRate) outRate.textContent = (Number(rate.value) / 100).toFixed(2).replace('.', ',') + '%';
+        if (outIncome) outIncome.textContent = kzt(income);
+      }
+
+      [amount, days, rate].forEach(function (el) {
+        el.addEventListener('input', update);
+      });
+      update();
+    })();
+  </script>
+</BaseLayout>

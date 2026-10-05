@@ -1,0 +1,162 @@
+---
+import { getCollection, render } from 'astro:content';
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+
+export const getStaticPaths = (async () => {
+  const entries = await getCollection('articles', ({ data }) => !data.draft);
+  return entries.map((entry) => ({
+    params: { slug: entry.id.replace(/\.md$/, '') },
+    props: { entry },
+  }));
+}) satisfies GetStaticPaths;
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+
+const all = await getCollection('articles', ({ data }) => !data.draft);
+
+const related = all
+  .filter(
+    (item) =>
+      item.id !== entry.id && item.data.category === entry.data.category,
+  )
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3)
+  .map((item) => ({
+    slug: item.id.replace(/\.md$/, ''),
+    title: item.data.title,
+    description: item.data.description,
+    category: item.data.category,
+    date: item.data.date,
+    readingMinutes: item.data.readingMinutes,
+    tags: item.data.tags,
+  }));
+
+const categoryLabel: Record<string, string> = {
+  mfo: 'МФО и займы',
+  cards: 'Банковские карты',
+  general: 'Финансовая грамотность',
+};
+
+const fmt = new Intl.DateTimeFormat('ru-KZ', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+});
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: entry.data.title,
+  description: entry.data.description,
+  datePublished: entry.data.date.toISOString(),
+  dateModified: (entry.data.updatedAt ?? entry.data.date).toISOString(),
+  inLanguage: 'ru-KZ',
+  keywords: entry.data.tags.join(', '),
+  articleSection: categoryLabel[entry.data.category],
+  author: { '@type': 'Organization', name: 'Finance KZ' },
+  publisher: { '@type': 'Organization', name: 'Finance KZ' },
+};
+---
+
+<BaseLayout
+  title={entry.data.title}
+  description={entry.data.description}
+  canonical={`/articles/${entry.id.replace(/\.md$/, '')}`}
+  ogType="article"
+  publishedAt={entry.data.date}
+  updatedAt={entry.data.updatedAt}
+  keywords={entry.data.tags}
+  jsonLd={jsonLd}
+>
+  <Breadcrumbs
+    items={[
+      { label: 'Главная', href: '/' },
+      { label: 'Статьи', href: '/articles' },
+      { label: entry.data.title },
+    ]}
+  />
+
+  <section class="section section--tight">
+    <div class="container">
+      <div class="article-layout">
+        <article class="article">
+          <div class="article__meta">
+            <span class="badge badge--brand">{categoryLabel[entry.data.category]}</span>
+            <span>{fmt.format(entry.data.date)}</span>
+            <span>· {entry.data.readingMinutes} мин чтения</span>
+          </div>
+
+          <h1>{entry.data.title}</h1>
+
+          <div class="prose" style="margin-top:22px;">
+            <Content />
+          </div>
+        </article>
+
+        <aside class="sidebar">
+          <div class="sidebar__card">
+            <div class="sidebar__title">Что почитать ещё</div>
+            {
+              related.length > 0 ? (
+                related.map((item) => (
+                  <a href={`/articles/${item.slug}`} class="mini-item">
+                    <b>{item.title}</b>
+                    <span>{item.readingMinutes} мин</span>
+                  </a>
+                ))
+              ) : (
+                <p class="small muted">В этой категории пока нет других статей.</p>
+              )
+            }
+          </div>
+
+          <div class="sidebar__card">
+            <div class="sidebar__title">Каталоги</div>
+            <a href="/mfo" class="mini-item">
+              <b>МФО Казахстана</b>
+              <span>Условия и ставки</span>
+            </a>
+            <a href="/bank-cards" class="mini-item">
+              <b>Банковские карты</b>
+              <span>Кэшбэк и тарифы</span>
+            </a>
+          </div>
+
+          <div class="sidebar__card">
+            <div class="sidebar__title">Дисклеймер</div>
+            <p class="small muted">
+              Материал носит информационный характер и не является рекомендацией или офертой.
+              Решения о займах и картах принимайте самостоятельно.
+            </p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  {
+    related.length > 0 && (
+      <section class="section">
+        <div class="container">
+          <div class="section-head">
+            <div>
+              <h2>Похожие материалы</h2>
+              <p>Продолжите чтение по теме.</p>
+            </div>
+            <a href="/articles" class="btn btn--ghost">Все статьи</a>
+          </div>
+
+          <div class="grid grid--3">
+            {related.map((item) => (
+              <ArticleCard article={item} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+</BaseLayout>

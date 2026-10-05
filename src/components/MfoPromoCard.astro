@@ -1,0 +1,62 @@
+---
+/**
+ * Промо-карточка МФО для главной страницы.
+ *
+ * ВАЖНО О ДАННЫХ: берёмся только src/data/mfo.ts. Параметры «Сумма», «Срок»
+ * и «Возраст» выводятся всегда, в том числе когда значения ещё не
+ * подтверждены — в этом случае показывается пустой плейсхолдер «—».
+ * Выдуманные условия не подставляются: как только поле в данных
+ * заполняется, значение появляется автоматически, без изменения вёрстки.
+ */
+import type { MfoOffer } from '../data/mfo';
+import {
+  MFO_BADGE_DEFAULT,
+  formatAmountRange,
+  formatTermRange,
+  formatAgeRange,
+} from '../data/mfo';
+
+export type Props = {
+  offer: MfoOffer;
+};
+
+const { offer } = Astro.props;
+
+const badge = offer.badgeText ?? MFO_BADGE_DEFAULT;
+
+/** Три параметра всегда в одном порядке. value = null → плейсхолдер. */
+const specs = [
+  { label: 'Сумма', value: formatAmountRange(offer.minAmount, offer.maxAmount) ?? null },
+  { label: 'Срок', value: formatTermRange(offer.minTermDays, offer.maxTermDays) ?? null },
+  { label: 'Возраст', value: formatAgeRange(offer.minAge, offer.maxAge) ?? null },
+];
+---
+
+<article class="mfo-promo-card">
+  <span class="mfo-promo-card__badge">{badge}</span>
+
+  <div class="mfo-promo-card__brand">
+    <span class="mfo-promo-card__logo" aria-hidden="true">{offer.logoText}</span>
+    <a class="mfo-promo-card__name" href={`/mfo/${offer.slug}`}>{offer.name}</a>
+  </div>
+
+  <dl class="mfo-promo-card__specs">
+    {
+      specs.map((spec) => (
+        <div class:list={['mfo-promo-card__spec', !spec.value && 'is-empty']}>
+          <dt class="mfo-promo-card__spec-label">{spec.label}</dt>
+          <dd class="mfo-promo-card__spec-value">{spec.value ?? '—'}</dd>
+        </div>
+      ))
+    }
+  </dl>
+
+  <a
+    href={offer.affiliateUrl}
+    class="mfo-promo-card__cta"
+    rel="sponsored nofollow noopener"
+    target="_blank"
+  >
+    Получить деньги
+  </a>
+</article>

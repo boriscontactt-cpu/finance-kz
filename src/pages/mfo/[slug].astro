@@ -1,0 +1,242 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import SpecList from '../../components/SpecList.astro';
+import AffiliateBlock from '../../components/AffiliateBlock.astro';
+import MfoCard from '../../components/MfoCard.astro';
+import FaqBlock from '../../components/FaqBlock.astro';
+import { PARTNER_DISCLOSURE, MFO_TERMS_HINT } from '../../config/site';
+import {
+  MFO_OFFERS,
+  formatAmountRange,
+  formatTermRange,
+  formatAgeRange,
+  hasConfirmedTerms,
+} from '../../data/mfo';
+
+export const getStaticPaths = (() =>
+  MFO_OFFERS.map((offer) => ({
+    params: { slug: offer.slug },
+    props: { offer },
+  }))) satisfies GetStaticPaths;
+
+const { offer } = Astro.props;
+
+const showTerms = hasConfirmedTerms(offer);
+
+/** Спецификация строится только из подтверждённых полей. */
+const specs = [
+  { label: 'Сумма займа', value: formatAmountRange(offer.minAmount, offer.maxAmount) },
+  { label: 'Ставка (НПД)', value: offer.aprAnnual !== undefined ? `${offer.aprAnnual}% годовых` : undefined },
+  { label: 'ГЭСВ', value: offer.gesv !== undefined ? `${offer.gesv}% годовых` : undefined },
+  { label: 'Срок', value: formatTermRange(offer.minTermDays, offer.maxTermDays) },
+  { label: 'Возраст', value: formatAgeRange(offer.minAge, offer.maxAge) },
+  { label: 'Оформление', value: offer.online ? 'Онлайн' : undefined },
+].filter((item): item is { label: string; value: string } => Boolean(item.value));
+
+const otherOffers = MFO_OFFERS.filter((o) => o.slug !== offer.slug).slice(0, 3);
+
+const faqs = [
+  {
+    q: `Как оформить займ в ${offer.name}?`,
+    a: `Нажмите «Получить займ» — вы перейдёте на официальный сайт ${offer.name} через партнёрскую ссылку и сможете подать заявку онлайн. Точный порядок оформления и список документов указаны на сайте организации.`,
+  },
+  {
+    q: `Какие условия займа у ${offer.name}?`,
+    a: `Актуальные суммы, сроки, ставки и требования смотрите на официальном сайте ${offer.name}. Мы не дублируем эти данные, пока они не проверены, чтобы вы не ориентировались на устаревшие цифры.`,
+  },
+  {
+    q: 'Почему здесь нет сумм и ставок?',
+    a: 'Мы публикуем только подтверждённые условия. Непроверенные цифры в финансовом справочнике опаснее, чем их отсутствие: человек может принять решение по неверной ставке.',
+  },
+  {
+    q: 'Это реклама?',
+    a: `Да, это партнёрское предложение. ${PARTNER_DISCLOSURE} Условия предоставляет сама организация.`,
+  },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: offer.name,
+  description: `Микрофинансовая организация в Казахстане. Условия займа на официальном сайте.`,
+  url: `https://finance-kz.kz/mfo/${offer.slug}`,
+  ...(offer.rating !== undefined && {
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: offer.rating,
+      reviewCount: offer.reviewsCount ?? 0,
+    },
+  }),
+};
+---
+
+<BaseLayout
+  title={`${offer.name} — займ онлайн в Казахстане | Условия`}
+  description={`${offer.name} — микрофинансовая организация Казахстана. Актуальные условия займа, сроки и требования на официальном сайте. Получите займ онлайн.`}
+  canonical={`/mfo/${offer.slug}`}
+  keywords={[`${offer.name} Казахстан`, `${offer.name} отзывы`, `займ онлайн ${offer.name}`, `${offer.name} условия`]}
+  jsonLd={jsonLd}
+>
+  <Breadcrumbs
+    items={[
+      { label: 'Главная', href: '/' },
+      { label: 'МФО Казахстана', href: '/mfo' },
+      { label: offer.name },
+    ]}
+  />
+
+  <section class="section section--tight">
+    <div class="container">
+      <div class="two-col">
+        <div>
+          <div class="org" style="margin-bottom:16px;">
+            <div class="org__logo" aria-hidden="true">{offer.logoText}</div>
+            <div>
+              <h1 style="font-size:clamp(1.6rem,1.2rem+1.6vw,2.4rem);">{offer.name}</h1>
+              <div class="org__tag">Микрофинансовая организация · Казахстан</div>
+            </div>
+          </div>
+
+          <div class="badge-row" style="margin-bottom:18px;">
+            <span class="badge badge--brand">Займ онлайн</span>
+            {offer.online && <span class="badge badge--accent">Оформление онлайн</span>}
+            {offer.fastMinutes && <span class="badge badge--accent">Решение до 15 минут</span>}
+            {offer.installment && <span class="badge badge--brand">Рассрочка 0%</span>}
+            {offer.rating !== undefined && <span class="badge">★ {offer.rating.toFixed(1)}</span>}
+          </div>
+
+          <p>
+            {offer.name} — микрофинансовая организация, работающая в Казахстане. Актуальные
+            условия займа: суммы, сроки, процентные ставки, требования к заёмщику и способы
+            получения денег — на официальном сайте организации.
+          </p>
+
+          {
+            showTerms ? (
+              <>
+                <h2 style="margin-top:28px;font-size:1.4rem;">Ключевые условия</h2>
+                <div style="margin-top:14px;">
+                  <SpecList items={specs} />
+                </div>
+              </>
+            ) : (
+              <div class="disclaimer-box" style="margin-top:24px;">
+                <strong>Условия займа уточняйте у организации.</strong> {MFO_TERMS_HINT}
+              </div>
+            )
+          }
+
+          {offer.methods && offer.methods.length > 0 && (
+            <>
+              <h2 style="margin-top:32px;font-size:1.4rem;">Способы получения денег</h2>
+              <ul class="list-check" style="margin-top:12px;">
+                {offer.methods.map((method) => <li>{method}</li>)}
+              </ul>
+            </>
+          )}
+
+          {offer.requirements && offer.requirements.length > 0 && (
+            <>
+              <h2 style="margin-top:32px;font-size:1.4rem;">Требования к заёмщику</h2>
+              <ul class="list-check" style="margin-top:12px;">
+                {offer.requirements.map((req) => <li>{req}</li>)}
+              </ul>
+            </>
+          )}
+
+          {offer.features && offer.features.length > 0 && (
+            <>
+              <h2 style="margin-top:32px;font-size:1.4rem;">Особенности</h2>
+              <ul class="list-check" style="margin-top:12px;">
+                {offer.features.map((feature) => <li>{feature}</li>)}
+              </ul>
+            </>
+          )}
+
+          {offer.pros && offer.pros.length > 0 && (
+            <div class="two-col" style="margin-top:32px;">
+              <div class="panel panel--good">
+                <div class="panel__title">Преимущества</div>
+                <ul class="list-check">
+                  {offer.pros.map((pro) => <li>{pro}</li>)}
+                </ul>
+              </div>
+              {offer.cons && offer.cons.length > 0 && (
+                <div class="panel panel--bad">
+                  <div class="panel__title">Ограничения</div>
+                  <ul class="list-cross">
+                    {offer.cons.map((con) => <li>{con}</li>)}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div class="disclaimer-box" style="margin-top:28px;">
+            <strong>Перед оформлением:</strong> сверьте условия на официальном сайте
+            организации и в договоре. Не сообщайте коды из SMS и данные карты никому, кто
+            представился сотрудником банка или МФО.
+          </div>
+        </div>
+
+        <aside class="sidebar">
+          <div class="sidebar__card">
+            <div class="sidebar__title">Оформить займ</div>
+            <p class="small muted" style="margin-bottom:14px;">
+              Перейдёте на официальный сайт {offer.name} через партнёрскую ссылку.
+            </p>
+            <a
+              href={offer.affiliateUrl}
+              class="btn btn--accent btn--block"
+              rel="sponsored nofollow noopener"
+              target="_blank"
+            >
+              {offer.cta}
+            </a>
+            <p class="small muted" style="margin-top:12px;">
+              {PARTNER_DISCLOSURE}
+            </p>
+          </div>
+
+          <AffiliateBlock
+            label={offer.name}
+            url={offer.affiliateUrl}
+            cta={offer.cta}
+            variant="primary"
+            size="sm"
+            disclosure={PARTNER_DISCLOSURE}
+          />
+
+          {offer.updatedAt && (
+            <div class="sidebar__card">
+              <div class="sidebar__title">Обновлено</div>
+              <p class="small muted">
+                Данные проверены {offer.updatedAt}. Информация справочная, не является офертой.
+              </p>
+            </div>
+          )}
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <FaqBlock items={faqs} title={`Частые вопросы о ${offer.name}`} />
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <h2>Другие организации в каталоге</h2>
+          <p>Сравните альтернативы и перейдите на их официальные сайты.</p>
+        </div>
+        <a href="/mfo" class="btn btn--ghost">Весь каталог МФО</a>
+      </div>
+
+      <div class="grid grid--3">
+        {otherOffers.map((other) => <MfoCard offer={other} />)}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

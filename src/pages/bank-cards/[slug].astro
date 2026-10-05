@@ -1,0 +1,207 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import SpecList from '../../components/SpecList.astro';
+import AffiliateBlock from '../../components/AffiliateBlock.astro';
+import CardOfferCard from '../../components/CardOfferCard.astro';
+import FaqBlock from '../../components/FaqBlock.astro';
+import { CARD_OFFERS, formatType } from '../../data/cards';
+
+export const getStaticPaths = (() =>
+  CARD_OFFERS.map((card) => ({
+    params: { slug: card.slug },
+    props: { card },
+  }))) satisfies GetStaticPaths;
+
+const { card } = Astro.props;
+
+const specs = [
+  { label: 'Кэшбэк', value: `до ${card.cashbackPercent}%` },
+  { label: 'Лимит кэшбэка', value: `${card.cashbackCapMonth.toLocaleString('ru-KZ')} ₸/мес` },
+  {
+    label: 'Обслуживание',
+    value:
+      card.serviceCostYear === 0
+        ? 'Бесплатно'
+        : `${card.serviceCostYear.toLocaleString('ru-KZ')} ₸/год`,
+  },
+  { label: 'Валюты', value: card.currency },
+];
+
+const otherCards = CARD_OFFERS.filter((c) => c.slug !== card.slug).slice(0, 3);
+
+const faqs = [
+  {
+    q: `Сколько стоит обслуживание карты ${card.name}?`,
+    a:
+      card.serviceCostYear === 0
+        ? 'Обслуживание бесплатное. Проверьте, нет ли скрытых условий: некоторые банки взимают комиссию при низкой ежемесячной активности.'
+        : `Стоимость обслуживания — ${card.serviceCostYear.toLocaleString('ru-KZ')} ₸ в год. Посчитайте, какой кэшбэк вы получите за год: если он меньше этой суммы, карта не окупится.`,
+  },
+  {
+    q: 'Как получить кэшбэк в полном объёме?',
+    a: `Обычно нужно выполнить условия акции: оплачивать покупки картой в партнёрских категориях и иногда активировать бонус в приложении. Максимум — ${card.cashbackCapMonth.toLocaleString('ru-KZ')} ₸ в месяц.`,
+  },
+  {
+    q: 'Какие требования к получению карты?',
+    a: `Возраст от ${card.minAge} до ${card.maxAge} лет. ${card.incomeRequirement ?? 'Подтверждение дохода не требуется.'}`,
+  },
+  {
+    q: 'Чем кредитная карта отличается от дебетовой?',
+    a:
+      card.type === 'credit'
+        ? 'Кредитная карта использует заёмные деньги банка. В рамках льготного периода проценты не начисляются, но при просрочке ставка действует на весь остаток.'
+        : 'Дебетовая карта работает с вашими собственными деньгами: вы получаете кэшбэк, рассрочку 0% и бесплатное обслуживание, но не используете заёмные средства.',
+  },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: `${card.name} — ${card.bank}`,
+  description: card.summary,
+  category: formatType(card.type) + ' банковская карта',
+  brand: { '@type': 'Brand', name: card.bank },
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: card.rating,
+    reviewCount: card.reviewsCount,
+  },
+  offers: {
+    '@type': 'Offer',
+    priceCurrency: 'KZT',
+    price: card.serviceCostYear,
+    availability: 'https://schema.org/InStock',
+    url: `https://finance-kz.kz/bank-cards/${card.slug}`,
+  },
+};
+---
+
+<BaseLayout
+  title={`${card.name} (${card.bank}) — кэшбэк, условия, отзывы`}
+  description={`Карта ${card.name} от ${card.bank}: кэшбэк до ${card.cashbackPercent}%, обслуживание ${card.serviceCostYear === 0 ? 'бесплатно' : card.serviceCostYear.toLocaleString('ru-KZ') + ' ₸/год'}. Полные условия, плюсы и ограничения.`}
+  canonical={`/bank-cards/${card.slug}`}
+  keywords={[`${card.name} отзывы`, `${card.bank} кредитная карта`, `${card.name} кэшбэк`, 'карта Казахстан']}
+  jsonLd={jsonLd}
+>
+  <Breadcrumbs
+    items={[
+      { label: 'Главная', href: '/' },
+      { label: 'Банковские карты', href: '/bank-cards' },
+      { label: card.name },
+    ]}
+  />
+
+  <section class="section section--tight">
+    <div class="container">
+      <div class="two-col">
+        <div>
+          <div class="org" style="margin-bottom:16px;">
+            <div class="org__logo org__logo--accent" aria-hidden="true">{card.logoText}</div>
+            <div>
+              <h1 style="font-size:clamp(1.6rem,1.2rem+1.6vw,2.4rem);">{card.name}</h1>
+              <div class="org__tag">{card.bank} · {card.tagline}</div>
+            </div>
+          </div>
+
+          <div class="badge-row" style="margin-bottom:18px;">
+            <span class:list={['badge', card.type === 'credit' ? 'badge--warn' : 'badge--brand']}>
+              {formatType(card.type)}
+            </span>
+            <span class="badge badge--brand">★ {card.rating.toFixed(1)} · {card.reviewsCount.toLocaleString('ru-KZ')} отзывов</span>
+            {card.virtual && <span class="badge badge--accent">Виртуальный выпуск</span>}
+            {card.gracePeriodDays && <span class="badge">Льготный период {card.gracePeriodDays} дн.</span>}
+          </div>
+
+          <p style="font-size:1.03rem;">{card.summary}</p>
+
+          <h2 style="margin-top:28px;font-size:1.4rem;">Ключевые условия</h2>
+          <div style="margin-top:14px;">
+            <SpecList items={specs} />
+          </div>
+
+          {
+            card.gracePeriodDays && (
+              <div class="panel" style="margin-top:20px;">
+                <h3 style="font-size:1.05rem;margin-bottom:10px;">Как работает льготный период</h3>
+                <p class="muted">
+                  В течение {card.gracePeriodDays} дней проценты на покупки не начисляются, если
+                  вы полностью погасили задолженность до конца периода. При частичном погашении
+                  ставка может начисляться на весь остаток — проверьте условия в договоре.
+                </p>
+              </div>
+            )
+          }
+
+          <h2 style="margin-top:32px;font-size:1.4rem;">Преимущества и возможности</h2>
+          <ul class="list-check" style="margin-top:12px;">
+            {card.features.map((feature) => <li>{feature}</li>)}
+          </ul>
+
+          <h2 style="margin-top:32px;font-size:1.4rem;">Кому подойдёт</h2>
+          <p style="margin-top:12px;">
+            Карта подойдёт, если вы {card.type === 'credit'
+              ? 'планируете крупные покупки и уверенно вернёте долг в льготный период'
+              : 'платите зарплатой на карту, часто делаете покупки в интернете и цените кэшбэк и бесплатное обслуживание'}. Возраст — от {card.minAge} до {card.maxAge} лет.
+            {card.incomeRequirement && ` ${card.incomeRequirement}.`}
+          </p>
+
+          <div class="disclaimer-box" style="margin-top:28px;">
+            <strong>Важно:</strong> условия банков меняются. Перед оформлением проверьте тарифы
+            на официальном сайте банка: стоимость обслуживания, лимиты кэшбэка, комиссии за
+            снятие и валютные операции.
+          </div>
+        </div>
+
+        <aside class="sidebar">
+          <div class="sidebar__card">
+            <div class="sidebar__title">Плюсы</div>
+            <ul class="list-check" style="font-size:0.9rem;">
+              {card.pros.map((pro) => <li>{pro}</li>)}
+            </ul>
+          </div>
+
+          <div class="sidebar__card">
+            <div class="sidebar__title">Ограничения</div>
+            <ul class="list-cross" style="font-size:0.9rem;">
+              {card.cons.map((con) => <li>{con}</li>)}
+            </ul>
+          </div>
+
+          <AffiliateBlock
+            label={card.affiliate.label}
+            url={card.affiliate.url}
+            cta={card.affiliate.cta}
+            variant="accent"
+          />
+
+          <div class="sidebar__card">
+            <div class="sidebar__title">Обновлено</div>
+            <p class="small muted">
+              Данные проверены {card.updatedAt}. Информация справочная, не является офертой.
+            </p>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <FaqBlock items={faqs} title={`Частые вопросы о карте ${card.name}`} />
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <h2>Другие карты в каталоге</h2>
+          <p>Сравните альтернативы по кэшбэку и стоимости обслуживания.</p>
+        </div>
+        <a href="/bank-cards" class="btn btn--ghost">Весь каталог карт</a>
+      </div>
+
+      <div class="grid grid--3">
+        {otherCards.map((other) => <CardOfferCard card={other} />)}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,51 @@
+---
+import type { CardOffer } from '../data/cards';
+import { formatType } from '../data/cards';
+
+export type Props = {
+  card: CardOffer;
+  accent?: boolean;
+};
+
+const { card, accent = true } = Astro.props;
+---
+
+<a href={`/bank-cards/${card.slug}`} class="card card--hover">
+  <div class="org">
+    <div class:list={['org__logo', accent && 'org__logo--accent']} aria-hidden="true">
+      {card.logoText}
+    </div>
+    <div>
+      <div class="org__name">{card.name}</div>
+      <div class="org__tag">{card.bank} · {card.tagline}</div>
+    </div>
+  </div>
+
+  <div class="specs">
+    <div class="specs__item">
+      <span class="specs__label">Кэшбэк</span>
+      <span class="specs__value">до {card.cashbackPercent}%</span>
+    </div>
+    <div class="specs__item">
+      <span class="specs__label">Обслуживание</span>
+      <span class="specs__value">
+        {card.serviceCostYear === 0 ? 'бесплатно' : `${card.serviceCostYear.toLocaleString('ru-KZ')} ₸/год`}
+      </span>
+    </div>
+    <div class="specs__item">
+      <span class="specs__label">Возраст</span>
+      <span class="specs__value">{card.minAge}+</span>
+    </div>
+  </div>
+
+  <div class="badge-row">
+    <span class:list={['badge', card.type === 'credit' ? 'badge--warn' : 'badge--brand']}>
+      {formatType(card.type)}
+    </span>
+    {card.virtual && <span class="badge badge--accent">Виртуальная</span>}
+    {card.gracePeriodDays && <span class="badge">Льготный период {card.gracePeriodDays} дн.</span>}
+    <span class="badge">★ {card.rating.toFixed(1)}</span>
+  </div>
+
+  <span class="btn btn--ghost btn--sm btn--block">Подробнее об условиях</span>
+</a>

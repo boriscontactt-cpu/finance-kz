@@ -1,0 +1,155 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { SITE, CONTACT, TAGLINE, PARTNER_DISCLOSURE } from '../config/site';
+import { MFO_OFFERS, MFO_PARTNER_NETWORK } from '../data/mfo';
+import { CARD_OFFERS } from '../data/cards';
+
+const title = 'О проекте Finance KZ — как мы работаем';
+const description =
+  'Finance KZ — информационный справочник по финансам РК: МФО и банковские карты Казахстана. Рассказываем о проекте, источниках данных, партнёрской монетизации и дисклеймере.';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  name: 'О проекте Finance KZ',
+  url: 'https://finance-kz.kz/about',
+  description,
+};
+---
+
+<BaseLayout {title} {description} canonical="/about" keywords={['о проекте Finance KZ', 'финансовый справочник Казахстан']} jsonLd={jsonLd}>
+  <Breadcrumbs items={[{ label: 'Главная', href: '/' }, { label: 'О проекте' }]} />
+
+  <section class="section section--tight">
+    <div class="container">
+      <span class="eyebrow">О проекте</span>
+      <h1>{TAGLINE}</h1>
+      <p class="muted" style="max-width:72ch;margin-top:16px;font-size:1.06rem;">
+        {SITE.name} — информационный справочник по микрофинансовым организациям и банковским
+        картам Казахстана. Мы собираем организации в одном каталоге, объясняем, как считать
+        переплату и на что обратить внимание до подписания договора.
+      </p>
+
+      <div class="two-col" style="margin-top:32px;">
+        <div class="panel">
+          <h2 style="font-size:1.3rem;">Что мы делаем</h2>
+          <ul class="list-check" style="margin-top:14px;">
+            <li>Собираем МФО Казахстана в одном каталоге и ведём на их официальные страницы.</li>
+            <li>Собираем банковские карты: кэшбэк, тарифы, рассрочку, виртуальный выпуск.</li>
+            <li>Публикуем суммы, ставки и сроки только после проверки по официальному источнику.</li>
+            <li>Пишем инструкции: как оформить заявку, как улучшить кредитную историю.</li>
+            <li>Предупреждаем о мошеннических схемах и красных флагах.</li>
+          </ul>
+        </div>
+
+        <div class="panel">
+          <h2 style="font-size:1.3rem;">Чего мы не делаем</h2>
+          <ul class="list-cross" style="margin-top:14px;">
+            <li>Не принимаем заявки на займы и не одобряем кредиты.</li>
+            <li>Не храним персональные данные пользователей.</li>
+            <li>Не требуем регистрации, авторизации и личного кабинета.</li>
+            <li>Не скрываем недостатки: у каждой организации есть блок ограничений.</li>
+            <li>Не гарантируем одобрение — решение всегда принимает сама организация.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="grid grid--4" style="margin-top:34px;">
+        <div class="card">
+          <div class="card__title">{MFO_OFFERS.length}</div>
+          <p class="card__text">МФО в каталоге со сравнением ставок и сроков</p>
+        </div>
+        <div class="card">
+          <div class="card__title">{CARD_OFFERS.length}</div>
+          <p class="card__text">банковских карт с кэшбэком и тарифами</p>
+        </div>
+        <div class="card">
+          <div class="card__title">0 ₸</div>
+          <p class="card__text">стоимость использования: без регистрации и подписок</p>
+        </div>
+        <div class="card">
+          <div class="card__title">Открыто</div>
+          <p class="card__text">проект работает в формате MVP и расширяется</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="partners">
+    <div class="container">
+      <div class="article">
+        <h2>Партнёры и монетизация</h2>
+        <p class="prose" style="margin-top:14px;">
+          Сайт работает по информационной модели: мы не берём деньги с пользователей и не
+          продаём их данные. Доход проекта может формироваться за счёт партнских ссылок
+          (affiliate/CPA), рекламных размещений и SEO-трафика.
+        </p>
+        <p class="prose">
+          Офферы МФО в каталоге предоставляются через партнёрскую сеть {MFO_PARTNER_NETWORK}.
+          {PARTNER_DISCLOSURE}
+        </p>
+        <p class="prose">
+          На страницах организаций есть блоки с меткой «Реклама» и пометкой о партнёрской
+          ссылке. Это обязательный элемент: он отделяет платное продвижение от редакционных
+          материалов. Редакционные оценки партнёрами не оплачиваются и не меняются.
+        </p>
+        <p class="prose">
+          Если вы представляете банк, МФО или партнёрскую программу, напишите на
+          <a href={`mailto:${CONTACT.email}`}>{CONTACT.email}</a> — обсудим формат размещения.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="disclaimer">
+    <div class="container">
+      <div class="article">
+        <h2>Дисклеймер</h2>
+        <div class="prose" style="margin-top:14px;">
+          <p>
+            {SITE.name} не является финансовой, кредитной или страховой организацией, не
+            предоставляет займы и не выпускает банковские продукты. Материалы сайта носят
+            исключительно информационный характер и не являются публичной офертой,
+            индивидуальной рекомендацией или обещанием результата.
+          </p>
+          <p>
+            Условия организаций меняются. Ставки, суммы, тарифы и лимиты на сайте приведены
+            справочно и могли устареть. Перед принятием решения сверяйте информацию с
+            официальным сайтом организации, её договором и актуальными данными Национального
+            банка Республики Казахстан.
+          </p>
+          <p>
+            Решение о получении займа, кредита или банковской карты вы принимаете
+            самостоятельно и на основании собственной оценки финансовой ситуации. Мы не несём
+            ответственности за решения пользователей и последствия использования информации,
+            размещённой на сайте.
+          </p>
+          <p>
+            <strong>Текущий статус данных.</strong> Офферы МФО в каталоге — реальные
+            партнёрские предложения сети {MFO_PARTNER_NETWORK}. Суммы, ставки, сроки, ГЭСВ и
+            возраст не публикуются, пока не подтверждены по официальному источнику.
+            Условия банковских карт в каталоге пока демонстрационные и будут заменены на
+            проверенные значения по мере развития проекта.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="cta">
+        <h2>Посмотрите каталоги</h2>
+        <p>
+          Сравните условия самостоятельно: {MFO_OFFERS.length} МФО и {CARD_OFFERS.length} карт
+          в едином формате.
+        </p>
+        <div class="btn-row" style="justify-content:center;">
+          <a href="/mfo" class="btn btn--accent">Каталог МФО</a>
+          <a href="/bank-cards" class="btn btn--ghost">Каталог карт</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
